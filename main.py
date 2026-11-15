@@ -1,56 +1,60 @@
+SEPARATOR = ";"
 
-def readFile(fileName: str) -> list:
-    Filehandle = open(fileName, 'r', encoding='utf-8')
-    names = []
 
-    for line in Filehandle:
-        name = line.strip()
+def readValues(filename: str) -> str:
+    """Reads numbers (one per row) from a file and returns them separated with ;"""
+    file = open(filename, "r", encoding="utf-8")
+    values: str = ""
+    while True:
+        line = file.readline()
+        if len(line) == 0:
+            break
+        row = line.strip()
+        if len(row) == 0:
+            continue
+        if len(values) > 0:
+            values += SEPARATOR
+        values += row
+    file.close()
+    return values
 
-        if name != "":
-            names.append(name)
 
-    Filehandle.close()
-    return names
+def analyseValues(values: str) -> str:
+    """Analyses the numbers and returns the result as CSV text (header row + data row)."""
+    count: int = 0
+    total: int = 0
+    greatest: int = 0
+    average: float = 0.0
+    if len(values) > 0:
+        parts = values.split(SEPARATOR)
+        greatest = int(parts[0])
+        for part in parts:
+            number = int(part)
+            count += 1
+            total += number
+            if number > greatest:
+                greatest = number
+        average = total / count
+    result: str = "Count;Sum;Greatest;Average\n"
+    result += "{0:d};{1:d};{2:d};{3:.2f}\n".format(count, total, greatest, average)
+    return result
 
-def analyzeNames(names: list) -> dict:
-    count = len(names)
 
-    if count == 0:
-     return {
-        "count": 0,
-        "shortest": 0,
-        "longest": 0,
-        "average": 0.0
-    }
+def displayResults(filename: str, results: str) -> None:
+    print("#### Number analysis - START ####")
+    print('File "{0:s}" results:'.format(filename))
+    print(results)
+    print("#### Number analysis - END ####")
 
-    lengths = []
-    for name in names:
-        lengths.append(len(name))
-    shortest = min(lengths)
-    longest = max(lengths)
-    average = sum(lengths) / count
-    return {
-    "count": count,
-    "shortest": shortest,
-    "longest": longest,
-    "average": average
-}     
 
-def main():
+def main() -> None:
     print("Program starting.")
-    print("This program analyses a list of names from a file.")
-
-    fileName = input("Insert filename to read: ")
-
-    print(f'Reading names from "{fileName}".')
-    names = readFile(fileName)
-    print("Analysing names...")
-    analysis = analyzeNames(names)
-    print("Analysis complete!")
-    print("#### REPORT BEGIN ####")
-    print(f"Name count - {analysis['count']}")
-    print(f"Shortest name - {analysis['shortest']} chars")
-    print(f"Longest name - {analysis['longest']} chars")
-    print(f"Average name - {analysis['average']:.2f} chars")
+    filename: str = input("Insert filename: ")
+    values: str = readValues(filename)
+    results: str = analyseValues(values)
+    displayResults(filename, results)
     print("Program ending.")
-main()
+
+
+if __name__ == "__main__":
+    main()
